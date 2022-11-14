@@ -7,20 +7,20 @@ import (
 )
 
 var (
-	errInternalSingleLevel = fmt.Errorf("internalErrorSingleLevel")
-	errInternalDoubleLevel = fmt.Errorf("internalErrorDoubleLevel")
-	errInternalTripleLevel = fmt.Errorf("internalErrorTripleLevel")
+	errInternalSingleLevel = errors.New("internalErrorSingleLevel")
+	errInternalDoubleLevel = errors.New("internalErrorDoubleLevel")
+	errInternalTripleLevel = errors.New("internalErrorTripleLevel")
 )
 
 var multiError = Errors{
 	fmt.Errorf("top level error1 (%w)", errInternalSingleLevel),
-	fmt.Errorf("top level error2"),
-	fmt.Errorf("top level error3"),
+	errors.New("top level error2"),
+	errors.New("top level error3"),
 }
 
 const multiErrorString string = `top level error1 (internalErrorSingleLevel), top level error2, top level error3`
 
-func TestMultiErrorUnwrap(t *testing.T) {
+func TestUnwrap(t *testing.T) {
 	t.Parallel()
 	if errors.Is(multiError.Unwrap(), errInternalSingleLevel) {
 		t.Fatalf("didnt strip first error want (%v), have (%v)", multiError[1:], multiError)
@@ -38,7 +38,7 @@ func (e errorStruct) Error() string {
 	return fmt.Sprint(e.v)
 }
 
-func TestMultiErrorAs(t *testing.T) {
+func TestAs(t *testing.T) {
 	t.Parallel()
 	err := Append(errInternalSingleLevel, errorStruct{v: true})
 	errStruct := errorStruct{}
@@ -50,20 +50,43 @@ func TestMultiErrorAs(t *testing.T) {
 	}
 }
 
-func TestMultiErrorError(t *testing.T) {
+func TestError(t *testing.T) {
 	t.Parallel()
 	if multiError.Error() != multiErrorString {
 		t.Fatalf("multiError.Error() is not multiErrorString, wanted (%v), got (%v)\n", multiErrorString, multiError.Error())
 	}
 }
 
-func TestMultiErrorIs(t *testing.T) {
+type WrappedError struct {
+	err error
+}
+
+func (we *WrappedError) Error() string {
+	return we.err.Error()
+}
+
+func (we *WrappedError) Unwrap() error {
+	return we.err
+}
+
+func TestErrorIs(t *testing.T) {
 	t.Parallel()
 	if !errors.Is(multiError, errInternalSingleLevel) {
 		t.Fatal("errors.Is multiError interalErrorSingleLevel is false")
 	}
+
 	if errors.Is(multiError, fmt.Errorf("fake error")) {
 		t.Fatal("errors.Is multiError fake error is true")
+	}
+
+	me := Errors{
+		fmt.Errorf("top level error1 (%w)", errInternalSingleLevel),
+		fmt.Errorf("top level error2 (%w)", &WrappedError{err: errInternalDoubleLevel}),
+		fmt.Errorf("top level error3"),
+	}
+
+	if !errors.Is(me, errInternalDoubleLevel) {
+		t.Fatal("Error contains a errInternalDoubleLevel and errors.Is did not find it")
 	}
 }
 
