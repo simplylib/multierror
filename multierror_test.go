@@ -18,7 +18,7 @@ var multiError = Errors{
 	errors.New("top level error3"),
 }
 
-const multiErrorString string = `top level error1 (internalErrorSingleLevel), top level error2, top level error3`
+const multiErrorString string = "top level error1 (internalErrorSingleLevel)\ntop level error2\ntop level error3"
 
 func TestUnwrap(t *testing.T) {
 	t.Parallel()

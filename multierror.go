@@ -18,7 +18,7 @@ func (me Errors) Error() string {
 		if i == length {
 			builder.WriteString(e.Error())
 		} else {
-			builder.WriteString(e.Error() + ", ")
+			builder.WriteString(e.Error() + "\n")
 		}
 	}
 
