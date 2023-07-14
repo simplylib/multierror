@@ -1,3 +1,8 @@
+# Status
+This project is now archived since go1.20 is out and allows usage of [errors.Join](https://pkg.go.dev/errors#Join)
+
+migrating is as simple as switching ```multierror.Append``` to ```errors.Join```
+
 # multierror
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/simplylib/multierror.svg)](https://pkg.go.dev/github.com/simplylib/multierror)
